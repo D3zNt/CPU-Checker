@@ -4,6 +4,9 @@
     <ClCompile Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\src\server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\src\interrupt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\CMakeLists.txt" />

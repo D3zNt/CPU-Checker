@@ -2,17 +2,51 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <iostream>
+#include <thread>
+#include <string>
 #include <nlohmann/json.hpp>
+#include <interrupt.hpp>
 
 #pragma comment (lib, "Ws2_32.lib")
-
 #define DEFAULT_PORT "27015"
+#define DEFAULT_BUFFER_LEN 512
+
+using json = nlohmann::json;
+
+int handleClientRequest(SOCKET ClientSocket) {
+    int iResult, iSendResult;
+    char buffer[DEFAULT_BUFFER_LEN];
+    iResult = recv(ClientSocket, buffer, DEFAULT_BUFFER_LEN, 0);
+
+    if (iResult > 0) {
+        std::string data = buffer;
+        data.resize(iResult);
+
+        std::cout << data << std::endl;
+        /* TODO: PROCESS THE DATA */
+
+        iSendResult = send(ClientSocket, "Performance metrics sucessfully received.\n", iResult, 0);
+        if (iSendResult == SOCKET_ERROR) {
+            std::cerr << "Send failed: " << WSAGetLastError() << std::endl;
+            closesocket(ClientSocket);
+            WSACleanup();
+            return 1;
+        }
+    } else if (iResult == 0) {
+        std::cout << "Connection closing...\n";
+    } else {
+        std::cerr << "recv failed: " << WSAGetLastError() << std::endl;
+        closesocket(ClientSocket);
+        WSACleanup();
+        return 1;
+    }
+    closesocket(ClientSocket);
+    return 0;
+}
 
 int main(void) 
 {
@@ -30,7 +64,7 @@ int main(void)
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
     if (iResult != 0) {
-        printf("WSAStartup failed with error: %d\n", iResult);
+        std::cerr << "WSAStartup failed with error: " << iResult << std::endl;
         return 1;
     }
 
@@ -43,7 +77,7 @@ int main(void)
     // Resolve the server address and port
     iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
     if ( iResult != 0 ) {
-        printf("getaddrinfo failed with error: %d\n", iResult);
+        std::cerr << "getaddrinfo failed with error: " << iResult << std::endl;
         WSACleanup();
         return 1;
     }
@@ -51,7 +85,7 @@ int main(void)
     // Create a SOCKET for the server to listen for client connections.
     ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (ListenSocket == INVALID_SOCKET) {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
+        std::cerr << "Socket failed with error: " << WSAGetLastError() << std::endl;
         freeaddrinfo(result);
         WSACleanup();
         return 1;
@@ -60,7 +94,8 @@ int main(void)
     // Setup the TCP listening socket
     iResult = bind( ListenSocket, result->ai_addr, (int)result->ai_addrlen);
     if (iResult == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
+        std::cerr << "bind failed with error: " << WSAGetLastError() << std::endl;
+
         freeaddrinfo(result);
         closesocket(ListenSocket);
         WSACleanup();
@@ -71,24 +106,25 @@ int main(void)
 
     iResult = listen(ListenSocket, SOMAXCONN);
     if (iResult == SOCKET_ERROR) {
-        printf("listen failed with error: %d\n", WSAGetLastError());
+        std::cerr << "listen failed with error: " << WSAGetLastError() << std::endl;
         closesocket(ListenSocket);
         WSACleanup();
         return 1;
     }
 
     // Accept a client socket
-    while (true) {
+    while (!INTERRUPT_STATUS) {
         ClientSocket = accept(ListenSocket, NULL, NULL);
         if (ClientSocket == INVALID_SOCKET) {
-            printf("accept failed with error: %d\n", WSAGetLastError());
+            std::cerr << "accept failed with error: " << WSAGetLastError() << std::endl;
             closesocket(ListenSocket);
             WSACleanup();
             return 1;
         }
-        /* TODO: create a new thread to handle this client connection */
-        closesocket(ClientSocket);
 
+        std::thread thr(handleClientRequest, ClientSocket);
+        thr.detach();
+        std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 
     // cleanup

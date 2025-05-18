@@ -14,12 +14,15 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(json)
 
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
+
 # Client executable
-add_executable(ClientSide src/client.cpp)
+add_executable(ClientSide src/client.cpp src/interrupt.cpp)
 target_include_directories(ClientSide PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(ClientSide PRIVATE nlohmann_json::nlohmann_json ws2_32)
 
 # Server executable
-add_executable(ServerSide src/server.cpp)
+add_executable(ServerSide src/server.cpp src/interrupt.cpp)
 target_include_directories(ServerSide PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(ServerSide PRIVATE nlohmann_json::nlohmann_json ws2_32)
