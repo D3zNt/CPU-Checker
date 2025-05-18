@@ -50,6 +50,8 @@ int handleClientRequest(SOCKET ClientSocket) {
 
 int main(void) 
 {
+    signal(SIGINT, signal_handler);
+
     WSADATA wsaData;
     int iResult;
 
@@ -114,18 +116,34 @@ int main(void)
 
     // Accept a client socket
     while (!INTERRUPT_STATUS) {
-        ClientSocket = accept(ListenSocket, NULL, NULL);
-        if (ClientSocket == INVALID_SOCKET) {
-            std::cerr << "accept failed with error: " << WSAGetLastError() << std::endl;
-            closesocket(ListenSocket);
-            WSACleanup();
-            return 1;
-        }
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(ListenSocket, &readfds);
 
-        std::thread thr(handleClientRequest, ClientSocket);
-        thr.detach();
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-    }
+        timeval timeout;
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
+
+        int selectResult = select(0, &readfds, NULL, NULL, &timeout);
+
+        if (selectResult == SOCKET_ERROR) {
+            std::cerr << "select failed with error: " << WSAGetLastError() << std::endl;
+            break;
+        }  
+        if (selectResult == 0) continue;
+
+        if (FD_ISSET(ListenSocket, &readfds)) {
+            ClientSocket = accept(ListenSocket, NULL, NULL);
+            if (ClientSocket == INVALID_SOCKET) {
+                std::cerr << "accept failed with error: " << WSAGetLastError() << std::endl;
+                closesocket(ListenSocket);
+                WSACleanup();
+                return 1;
+            }
+
+            std::thread thr(handleClientRequest, ClientSocket);
+            thr.detach();
+        }    }
 
     // cleanup
     closesocket(ListenSocket);
