@@ -9,6 +9,7 @@
 #include <nlohmann/json.hpp>
 #include <database.hpp>
 
+
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
@@ -17,6 +18,17 @@
 #define DEFAULT_PORT "27015"
 
 using json = nlohmann::json;
+
+std::string retrieveHostname() {
+    std::string str;
+    char hostname[256];
+    if (gethostname(hostname, sizeof(hostname)) == 0) {
+        str = hostname;
+        str.shrink_to_fit();
+        return str;
+    }
+    return NULL;
+}
 
 int main(int argc, char **argv) 
 {
@@ -30,7 +42,6 @@ int main(int argc, char **argv)
                     *ptr = NULL,
                     hints;
     int iResult;
-    int uniqueId = rand();
 
     // Validate the parameters
     if (argc != 2) {
@@ -45,11 +56,18 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    std::string hostname = retrieveHostname();
+
+    if (hostname.empty()) {
+        std::cerr << "Error getting hostname" << std::endl;
+        return 1;
+    }
+
     ZeroMemory( &hints, sizeof(hints) );
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
-
+    
     // Resolve the server address and port
     iResult = getaddrinfo(argv[1], DEFAULT_PORT, &hints, &result);
     if ( iResult != 0 ) {
@@ -96,7 +114,7 @@ int main(int argc, char **argv)
         perfMetricDevice.memory = rand() % 100;
         perfMetricDevice.timestamp = timestamp;
 
-        j["id"] = uniqueId;
+        j["id"] = hostname;
         j["cpu_usage"] = perfMetricDevice.cpu;
         j["memory_usage"] = perfMetricDevice.memory;
         j["timestamp"] = perfMetricDevice.timestamp;
