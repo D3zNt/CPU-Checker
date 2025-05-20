@@ -89,11 +89,12 @@ int main(int argc, char **argv)
 
         /* TODO: CREATE A BETTER RANDOMIZATION ALGORITHM */
         time_t timestamp;
+        time(&timestamp);
 
         CPU_DATA perfMetricDevice;
         perfMetricDevice.cpu = rand() % 100;
         perfMetricDevice.memory = rand() % 100;
-        perfMetricDevice.timestamp = time(&timestamp);
+        perfMetricDevice.timestamp = timestamp;
 
         j["id"] = uniqueId;
         j["cpu_usage"] = perfMetricDevice.cpu;

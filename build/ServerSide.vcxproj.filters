@@ -7,9 +7,6 @@
     <ClCompile Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\src\interrupt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\src\dataToJSON.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\src\database.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
