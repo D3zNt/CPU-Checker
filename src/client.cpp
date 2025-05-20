@@ -7,6 +7,7 @@
 #include <interrupt.hpp>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <database.hpp>
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -16,12 +17,6 @@
 #define DEFAULT_PORT "27015"
 
 using json = nlohmann::json;
-
-typedef struct {
-    int id;
-    float cpu;    // percentage
-    float memory; // percentage
-} CPU_DATA;
 
 int main(int argc, char **argv) 
 {
@@ -93,13 +88,17 @@ int main(int argc, char **argv)
         }
 
         /* TODO: CREATE A BETTER RANDOMIZATION ALGORITHM */
+        time_t timestamp;
+
         CPU_DATA perfMetricDevice;
         perfMetricDevice.cpu = rand() % 100;
         perfMetricDevice.memory = rand() % 100;
+        perfMetricDevice.timestamp = time(&timestamp);
 
         j["id"] = uniqueId;
         j["cpu_usage"] = perfMetricDevice.cpu;
         j["memory_usage"] = perfMetricDevice.memory;
+        j["timestamp"] = perfMetricDevice.timestamp;
 
         std::string strData = j.dump();
 

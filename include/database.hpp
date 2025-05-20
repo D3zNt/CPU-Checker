@@ -3,9 +3,11 @@
 #pragma once
 
 #include <vector>
+#include <ctime>
 
 typedef struct {
     int id;
+    time_t timestamp;
     float cpu;    // percentage
     float memory; // percentage
 } CPU_DATA;

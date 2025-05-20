@@ -60,6 +60,8 @@ int handleClientRequest(SOCKET ClientSocket) {
     iResult = recv(ClientSocket, buffer, DEFAULT_BUFFER_LEN, 0);
 
     if (iResult > 0) {
+        /* VALIDATE CLIENT'S REQUEST */
+
         std::string data = buffer;
         data.resize(iResult);
 
@@ -72,7 +74,7 @@ int handleClientRequest(SOCKET ClientSocket) {
             DATA_RECORDS.emplace_back(machinePerformance);
         }
 
-        /* TODO: PROCESS THE DATA 
+        /* TODO: PROCESS THE DATA
         IMPORTANT: (THE DATA IS ALREADY IN A VECTOR CALLED DATA_RECORDS GLOBALLY DEFINED IN DATABASE.CPP) 
         */
 
