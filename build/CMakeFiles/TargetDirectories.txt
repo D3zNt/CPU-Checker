@@ -1,0 +1,5 @@
+C:/Users/Saddam/Desktop/Projects/CPU-Checker/build/CMakeFiles/ClientSide.dir
+C:/Users/Saddam/Desktop/Projects/CPU-Checker/build/CMakeFiles/ServerSide.dir
+C:/Users/Saddam/Desktop/Projects/CPU-Checker/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Saddam/Desktop/Projects/CPU-Checker/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/Saddam/Desktop/Projects/CPU-Checker/build/_deps/json-build/CMakeFiles/ALL_BUILD.dir
