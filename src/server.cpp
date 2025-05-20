@@ -86,11 +86,11 @@ int handleClientRequest(SOCKET ClientSocket) {
 
         json JSONValue = json::parse(data);
 
-        if (validateJSON(JSONValue) < 0) {
-            closesocket(ClientSocket);
-            WSACleanup();
-            return 1;        
-        }
+        // if (validateJSON(JSONValue) < 0) {
+        //     closesocket(ClientSocket);
+        //     WSACleanup();
+        //     return 1;        
+        // }
 
         CPU_DATA machinePerformance = {JSONValue["id"], JSONValue["cpu_usage"], JSONValue["memory_usage"]};    
         
