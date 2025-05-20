@@ -8,14 +8,51 @@
 #include <iostream>
 #include <thread>
 #include <string>
+#include <fstream>
 #include <nlohmann/json.hpp>
 #include <interrupt.hpp>
+#include <database.hpp>
+#include <mutex>
 
 #pragma comment (lib, "Ws2_32.lib")
 #define DEFAULT_PORT "27015"
 #define DEFAULT_BUFFER_LEN 512
 
 using json = nlohmann::json;
+
+std::mutex dataMutex;
+
+/*
+USE MERGE SORT/QUICK SORT COMBINED WITH OPENMP
+*/
+void sortData() {
+    /* DO THE SORTING HERE */
+    std::lock_guard<std::mutex> recordLock(dataMutex);    
+    int count = 0;
+
+    /* RESULT */
+    for (auto &entry : DATA_RECORDS) {
+        std::cout << 
+        "ELEMENT: " << count++ << "\n" << 
+        "ID: " << entry.id << "\n" <<
+        "CPU USAGE (%): " << entry.cpu <<  "\n" 
+        << "MEMORY USAGE (%): " << entry.memory << "\n\n";
+    }
+}
+
+/* NOTE:
+CHECK THE CONTENT OF THE BIN FILE IN BUILD/DEBUG FOLDER
+*/
+void convertToBSON(json JSONValue) {
+
+}
+void searchData() {
+
+}
+
+// void convertToJSON() {
+
+// }
 
 int handleClientRequest(SOCKET ClientSocket) {
     int iResult, iSendResult;
@@ -26,8 +63,30 @@ int handleClientRequest(SOCKET ClientSocket) {
         std::string data = buffer;
         data.resize(iResult);
 
-        std::cout << data << std::endl;
-        /* TODO: PROCESS THE DATA */
+        json JSONValue = json::parse(data);
+
+        CPU_DATA machinePerformance = {JSONValue["id"], JSONValue["cpu_usage"], JSONValue["memory_usage"]};    
+        
+        {
+            std::lock_guard<std::mutex> recordlock(dataMutex);
+            DATA_RECORDS.emplace_back(machinePerformance);
+        }
+
+        /* TODO: PROCESS THE DATA 
+        IMPORTANT: (THE DATA IS ALREADY IN A VECTOR CALLED DATA_RECORDS GLOBALLY DEFINED IN DATABASE.CPP) 
+        */
+
+        // convert to BSON
+        std::thread threadToStoreBinary(convertToBSON, JSONValue);
+        threadToStoreBinary.detach();
+
+        // search
+
+        // sorting
+        std::thread threadToSort(sortData);
+        threadToSort.detach();
+
+        // convert to JSON
 
         iSendResult = send(ClientSocket, "Performance metrics sucessfully received.\n", iResult, 0);
         if (iSendResult == SOCKET_ERROR) {
@@ -143,7 +202,8 @@ int main(void)
 
             std::thread thr(handleClientRequest, ClientSocket);
             thr.detach();
-        }    }
+        }    
+    }
 
     // cleanup
     closesocket(ListenSocket);
