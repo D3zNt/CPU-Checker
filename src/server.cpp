@@ -55,7 +55,7 @@ void searchData() {
 // }
 
 int validateJSON(json JSON) {
-    if (!JSON.contains("id") || !JSON.contains("cpu_usage") || !JSON.contains("memory_usage")) {
+    if (!JSON.contains("id") || !JSON.contains("cpu_usage") || !JSON.contains("memory_usage") || !JSON.contains("timestamp")) {
         std::cerr << "Missing required fields\n";
         return -1;
     }
