@@ -334,7 +334,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <ItemGroup>
     <ClCompile Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\src\client.cpp" />
     <ClCompile Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\src\interrupt.cpp" />
-    <ClCompile Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\src\dataToJSON.cpp" />
     <ClCompile Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\src\database.cpp" />
     <Natvis Include="C:\Users\Saddam\Desktop\Projects\CPU-Checker\build\_deps\json-src\nlohmann_json.natvis">
     </Natvis>

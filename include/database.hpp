@@ -3,9 +3,12 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <ctime>
 
 typedef struct {
-    int id;
+    std::string id;
+    time_t timestamp;
     float cpu;    // percentage
     float memory; // percentage
 } CPU_DATA;

@@ -54,16 +54,43 @@ void searchData() {
 
 // }
 
+int validateJSON(json JSON) {
+    if (!JSON.contains("id") || !JSON.contains("cpu_usage") || !JSON.contains("memory_usage") || !JSON.contains("timestamp")) {
+        std::cerr << "Missing required fields\n";
+        return -1;
+    }
+
+    if (!JSON["cpu_usage"].is_number() || !JSON["memory_usage"].is_number()) {
+        std::cerr << "Invalid field types\n";
+        return -1;
+    }
+
+    if ((JSON["cpu_usage"] < 0 || JSON["cpu_usage"] > 100) || 
+        (JSON["memory_usage"] < 0 || JSON["memory_usage"] > 100)) {
+        std::cerr << "Data out of range\n";
+        return -1;
+    }
+    return 0;
+}
+
 int handleClientRequest(SOCKET ClientSocket) {
     int iResult, iSendResult;
     char buffer[DEFAULT_BUFFER_LEN];
     iResult = recv(ClientSocket, buffer, DEFAULT_BUFFER_LEN, 0);
 
     if (iResult > 0) {
+        /* VALIDATE CLIENT'S REQUEST */
+
         std::string data = buffer;
         data.resize(iResult);
 
         json JSONValue = json::parse(data);
+
+        // if (validateJSON(JSONValue) < 0) {
+        //     closesocket(ClientSocket);
+        //     WSACleanup();
+        //     return 1;        
+        // }
 
         CPU_DATA machinePerformance = {JSONValue["id"], JSONValue["cpu_usage"], JSONValue["memory_usage"]};    
         
@@ -72,7 +99,7 @@ int handleClientRequest(SOCKET ClientSocket) {
             DATA_RECORDS.emplace_back(machinePerformance);
         }
 
-        /* TODO: PROCESS THE DATA 
+        /* TODO: PROCESS THE DATA
         IMPORTANT: (THE DATA IS ALREADY IN A VECTOR CALLED DATA_RECORDS GLOBALLY DEFINED IN DATABASE.CPP) 
         */
 
@@ -119,8 +146,6 @@ int main(void)
 
     struct addrinfo *result = NULL;
     struct addrinfo hints;
-
-    int iSendResult;
     
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
