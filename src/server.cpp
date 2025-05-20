@@ -60,7 +60,7 @@ int validateJSON(json JSON) {
         return -1;
     }
 
-    if (!JSON["id"].is_number_integer() || !JSON["cpu_usage"].is_number() || !JSON["memory_usage"].is_number()) {
+    if (!JSON["cpu_usage"].is_number() || !JSON["memory_usage"].is_number()) {
         std::cerr << "Invalid field types\n";
         return -1;
     }
