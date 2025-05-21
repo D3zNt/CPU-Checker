@@ -5,6 +5,7 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip> 
+#include "create-date-folder.cpp"
 
 using namespace std;
 
@@ -18,7 +19,7 @@ struct CPU_DATA{
 
 void search();
 void sort();
-void convert_to_binary(CPU_DATA dataList[], int counter);
+void convert_to_binary(CPU_DATA dataList[]);
 void convert_to_json();
 
 
@@ -37,12 +38,14 @@ int main(){
         {10, 82.3, 8.2},
     };
 
+    test();
+
 
     // need multithreading  one thread is still here saving the file
-    int counter = 1;
+
     while (true) {
-        convert_to_binary(tempList, counter);
-        counter++;
+        convert_to_binary(tempList);
+
         std::this_thread::sleep_for(std::chrono::seconds(10));  
     }
 
@@ -51,11 +54,22 @@ int main(){
 
 
 
-void convert_to_binary(CPU_DATA dataList[],int counter){
+void convert_to_binary(CPU_DATA dataList[]){
 
+    ostringstream fileName;
+    time_t now = time(nullptr);
+    tm local_tm;
+
+#if defined(_WIN32) || defined(_WIN64) // this is used to check if the code running is in windows
+    localtime_s(&local_tm, &now);
+#else
+    local_tm = *localtime(&now);
+#endif
     
-    
-    fstream f("records.dat", ios::out | ios::binary);
+    fileName << folderName.str() << "/backup[" << put_time(&local_tm,"%H-%M-%S" ) << "].dat";
+    const char* fileNameInStr = fileName.str().c_str();
+
+    fstream f(fileNameInStr, ios::out | ios::binary);
 
     if(f){
         f.write(reinterpret_cast<char*>(dataList), SIZE * sizeof(CPU_DATA));
