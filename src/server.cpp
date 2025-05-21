@@ -84,13 +84,14 @@ int handleClientRequest(SOCKET ClientSocket) {
         std::string data = buffer;
         data.resize(iResult);
 
-        json JSONValue = json::parse(data);
-
-        // if (validateJSON(JSONValue) < 0) {
-        //     closesocket(ClientSocket);
-        //     WSACleanup();
-        //     return 1;        
-        // }
+        json JSONValue;
+        try {
+            JSONValue = json::parse(data);
+        } catch (const std::exception& e) {
+            std::cerr << "JSON parse error: " << e.what() << '\n';
+            closesocket(ClientSocket);
+            return 1;
+        }
 
         CPU_DATA machinePerformance = {JSONValue["id"], JSONValue["cpu_usage"], JSONValue["memory_usage"]};    
         
@@ -104,15 +105,27 @@ int handleClientRequest(SOCKET ClientSocket) {
         */
 
         // convert to BSON
-        std::thread threadToStoreBinary(convertToBSON, JSONValue);
-        threadToStoreBinary.detach();
+        std::thread([JSONValue] {
+            try{
+                convertToBSON(JSONValue);
+            } catch (const std::exception &except) {
+                std::cerr << "Worker thread crashed: " << except.what() << '\n';
+            }
+        }).detach();
 
         // search
 
-        // sorting
-        std::thread threadToSort(sortData);
-        threadToSort.detach();
+        // // sorting
+        // std::thread threadToSort(sortData);
+        // threadToSort.detach();
 
+        std::thread([] {
+            try{
+                sortData();
+            } catch (const std::exception &except) {
+                std::cerr << "Worker thread crashed: " << except.what() << '\n';
+            }
+        }).detach();
         // convert to JSON
 
         iSendResult = send(ClientSocket, "Performance metrics sucessfully received.\n", iResult, 0);
@@ -225,8 +238,13 @@ int main(void)
                 return 1;
             }
 
-            std::thread thr(handleClientRequest, ClientSocket);
-            thr.detach();
+            std::thread([ClientSocket] {
+                try{
+                    handleClientRequest(ClientSocket);
+                } catch (const std::exception &except) {
+                    std::cerr << "Worker thread crashed: " << except.what() << '\n';
+                }
+            }).detach();
         }    
     }
 
