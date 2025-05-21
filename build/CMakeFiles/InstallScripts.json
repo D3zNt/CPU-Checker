@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"C:/Users/Saddam/Desktop/Projects/CPU-Checker/build/cmake_install.cmake",
-		"C:/Users/Saddam/Desktop/Projects/CPU-Checker/build/_deps/json-build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

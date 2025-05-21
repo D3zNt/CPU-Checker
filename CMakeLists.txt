@@ -23,6 +23,6 @@ target_include_directories(ClientSide PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(ClientSide PRIVATE nlohmann_json::nlohmann_json ws2_32)
 
 # Server executable
-add_executable(ServerSide src/server.cpp src/interrupt.cpp src/database.cpp)
+add_executable(ServerSide src/server.cpp src/interrupt.cpp src/database.cpp src/binaryConvert.cpp)
 target_include_directories(ServerSide PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(ServerSide PRIVATE nlohmann_json::nlohmann_json ws2_32)
