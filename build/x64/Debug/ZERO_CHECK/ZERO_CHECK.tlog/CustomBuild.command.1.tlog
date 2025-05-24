@@ -1,6 +1,6 @@
-^C:\USERS\SADDAM\DESKTOP\PROJECTS\CPU-CHECKER\BUILD\CMAKEFILES\DBFDBC6986ED238BF17A63E9421CF276\GENERATE.STAMP.RULE
+^C:\USERS\SADDAM\DESKTOP\CPU-CHECKER\BUILD\CMAKEFILES\1F2879DA32E42ACF8AF380E0A3F4D994\GENERATE.STAMP.RULE
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Saddam/Desktop/Projects/CPU-Checker -BC:/Users/Saddam/Desktop/Projects/CPU-Checker/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Saddam/Desktop/Projects/CPU-Checker/build/CPUChecker.sln
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/Saddam/Desktop/CPU-Checker -BC:/Users/Saddam/Desktop/CPU-Checker/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Saddam/Desktop/CPU-Checker/build/CPUChecker.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

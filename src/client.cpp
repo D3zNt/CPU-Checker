@@ -8,7 +8,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <database.hpp>
-
+#include <cpuLoad.hpp>
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -110,8 +110,8 @@ int main(int argc, char **argv)
         time(&timestamp);
 
         CPU_DATA perfMetricDevice;
-        perfMetricDevice.cpu = rand() % 100;
-        perfMetricDevice.memory = rand() % 100;
+        perfMetricDevice.cpu = getCPUUsage();
+        perfMetricDevice.memory = getMemoryUsage();
         perfMetricDevice.timestamp = timestamp;
 
         j["id"] = hostname;

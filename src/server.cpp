@@ -4,15 +4,12 @@
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <stdlib.h>
-#include <iostream>
-#include <thread>
-#include <string>
-#include <fstream>
 #include <nlohmann/json.hpp>
 #include <interrupt.hpp>
-#include <database.hpp>
 #include <mutex>
+#include <binaryBackup.hpp>
+#include <validation.hpp>
+#include <bufferData.hpp>
 
 #pragma comment (lib, "Ws2_32.lib")
 #define DEFAULT_PORT "27015"
@@ -22,56 +19,13 @@ using json = nlohmann::json;
 
 std::mutex dataMutex;
 
-/*
-USE MERGE SORT/QUICK SORT COMBINED WITH OPENMP
-*/
-void sortData() {
-    /* DO THE SORTING HERE */
-    std::lock_guard<std::mutex> recordLock(dataMutex);    
-    int count = 0;
-
-    /* RESULT */
-    for (auto &entry : DATA_RECORDS) {
-        std::cout << 
-        "ELEMENT: " << count++ << "\n" << 
-        "ID: " << entry.id << "\n" <<
-        "CPU USAGE (%): " << entry.cpu <<  "\n" 
-        << "MEMORY USAGE (%): " << entry.memory << "\n\n";
-    }
-}
-
 /* NOTE:
 CHECK THE CONTENT OF THE BIN FILE IN BUILD/DEBUG FOLDER
 */
-void convertToBSON(json JSONValue) {
-
-}
-void searchData() {
-
-}
 
 // void convertToJSON() {
 
 // }
-
-int validateJSON(json JSON) {
-    if (!JSON.contains("id") || !JSON.contains("cpu_usage") || !JSON.contains("memory_usage") || !JSON.contains("timestamp")) {
-        std::cerr << "Missing required fields\n";
-        return -1;
-    }
-
-    if (!JSON["cpu_usage"].is_number() || !JSON["memory_usage"].is_number()) {
-        std::cerr << "Invalid field types\n";
-        return -1;
-    }
-
-    if ((JSON["cpu_usage"] < 0 || JSON["cpu_usage"] > 100) || 
-        (JSON["memory_usage"] < 0 || JSON["memory_usage"] > 100)) {
-        std::cerr << "Data out of range\n";
-        return -1;
-    }
-    return 0;
-}
 
 int handleClientRequest(SOCKET ClientSocket) {
     int iResult, iSendResult;
@@ -99,34 +53,6 @@ int handleClientRequest(SOCKET ClientSocket) {
             std::lock_guard<std::mutex> recordlock(dataMutex);
             DATA_RECORDS.emplace_back(machinePerformance);
         }
-
-        /* TODO: PROCESS THE DATA
-        IMPORTANT: (THE DATA IS ALREADY IN A VECTOR CALLED DATA_RECORDS GLOBALLY DEFINED IN DATABASE.CPP) 
-        */
-
-        // convert to BSON
-        std::thread([JSONValue] {
-            try{
-                convertToBSON(JSONValue);
-            } catch (const std::exception &except) {
-                std::cerr << "Worker thread crashed: " << except.what() << '\n';
-            }
-        }).detach();
-
-        // search
-
-        // // sorting
-        // std::thread threadToSort(sortData);
-        // threadToSort.detach();
-
-        std::thread([] {
-            try{
-                sortData();
-            } catch (const std::exception &except) {
-                std::cerr << "Worker thread crashed: " << except.what() << '\n';
-            }
-        }).detach();
-        // convert to JSON
 
         iSendResult = send(ClientSocket, "Performance metrics sucessfully received.\n", iResult, 0);
         if (iSendResult == SOCKET_ERROR) {

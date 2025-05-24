@@ -1,10 +1,7 @@
-#include <Windows.h>
 #include <iostream>
 #include <thread> 
-#include <Pdh.h>
-#include <chrono> 
-#include <processthreadsapi.h>
-
+#include <chrono>
+#include <cpuLoad.hpp> 
 // https://learn.microsoft.com/en-us/windows/win32/perfctrs/performance-counters-portal
 
 float getMemoryUsage() {
@@ -49,19 +46,4 @@ float getCPUUsage() {
     float cpuUsage = static_cast<float>(systemTime) / static_cast<float>(totalTime);
 
     return cpuUsage * 100;
-}
-
-int main() {
-    float cpuUsage;
-    float memoryUsage;
-
-    while (true) {
-        cpuUsage = getCPUUsage();
-        memoryUsage = getMemoryUsage();
-
-        std::cout << "CPU Usage (%): " << cpuUsage << '\n';
-        std::cout << "Memory Usage (%): " << memoryUsage << "\n\n";
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
 }

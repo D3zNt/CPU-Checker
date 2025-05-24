@@ -1,15 +1,15 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 project(CPUChecker)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 
 FetchContent_Declare(
   json
-  GIT_REPOSITORY https://github.com/nlohmann/json.git
-  GIT_TAG v3.11.2
+  GIT_REPOSITORY https://github.com/nlohmann/json
+  GIT_TAG v3.12.0
 )
 
 FetchContent_MakeAvailable(json)
@@ -18,11 +18,12 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 
 # Client executable
-add_executable(ClientSide src/client.cpp src/interrupt.cpp src/database.cpp)
+add_executable(ClientSide src/client.cpp src/interrupt.cpp src/database.cpp src/cpuLoad.cpp)
 target_include_directories(ClientSide PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(ClientSide PRIVATE nlohmann_json::nlohmann_json ws2_32)
 
 # Server executable
-add_executable(ServerSide src/server.cpp src/interrupt.cpp src/database.cpp)
+add_executable(ServerSide src/server.cpp src/interrupt.cpp 
+  src/database.cpp src/binaryConvert.cpp src/bufferData.cpp src/validation.cpp)
 target_include_directories(ServerSide PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(ServerSide PRIVATE nlohmann_json::nlohmann_json ws2_32)
