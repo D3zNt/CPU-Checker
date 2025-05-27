@@ -2,12 +2,11 @@
 
 #define WIN32_LEAN_AND_MEAN
 
+#include <database.hpp>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <nlohmann/json.hpp>
 #include <interrupt.hpp>
-#include <mutex>
-#include <binaryBackup.hpp>
 #include <validation.hpp>
 #include <bufferData.hpp>
 
@@ -17,23 +16,13 @@
 
 using json = nlohmann::json;
 
-std::mutex dataMutex;
-
-/* NOTE:
-CHECK THE CONTENT OF THE BIN FILE IN BUILD/DEBUG FOLDER
-*/
-
-// void convertToJSON() {
-
-// }
-
 int handleClientRequest(SOCKET ClientSocket) {
     int iResult, iSendResult;
     char buffer[DEFAULT_BUFFER_LEN];
     iResult = recv(ClientSocket, buffer, DEFAULT_BUFFER_LEN, 0);
-
-    if (iResult > 0) {
-        /* VALIDATE CLIENT'S REQUEST */
+    
+    if (iResult > 0) { 
+        printf("Bytes received: %d\n", iResult);
 
         std::string data = buffer;
         data.resize(iResult);
@@ -47,20 +36,13 @@ int handleClientRequest(SOCKET ClientSocket) {
             return 1;
         }
 
-        CPU_DATA machinePerformance = {JSONValue["id"], JSONValue["cpu_usage"], JSONValue["memory_usage"]};    
+        CPU_DATA machinePerformance = {JSONValue["id"], JSONValue["timestamp"], JSONValue["cpu_usage"], JSONValue["memory_usage"]};
         
         {
-            std::lock_guard<std::mutex> recordlock(dataMutex);
-            DATA_RECORDS.emplace_back(machinePerformance);
+            std::lock_guard<std::mutex> lock(dataMutex);
+            addLogEntry(machinePerformance);
         }
-
-        iSendResult = send(ClientSocket, "Performance metrics sucessfully received.\n", iResult, 0);
-        if (iSendResult == SOCKET_ERROR) {
-            std::cerr << "Send failed: " << WSAGetLastError() << std::endl;
-            closesocket(ClientSocket);
-            WSACleanup();
-            return 1;
-        }
+        
     } else if (iResult == 0) {
         std::cout << "Connection closing...\n";
     } else {
@@ -137,6 +119,17 @@ int main(void)
         return 1;
     }
 
+    std::thread([] {
+        try {
+            while (!INTERRUPT_STATUS) {
+                flushBuffer();
+                std::this_thread::sleep_for(std::chrono::seconds(60));
+            }
+        } catch (const std::exception &except) {
+            std::cerr << "Worker thread crashed: " << except.what() << '\n';
+        }
+    }).detach();
+
     // Accept a client socket
     while (!INTERRUPT_STATUS) {
         fd_set readfds;
@@ -173,6 +166,10 @@ int main(void)
             }).detach();
         }    
     }
+
+    /* Sudden termination -> immediately flushes all the buffer */
+    /* Pass interrupt status as argument */
+    flushBuffer();
 
     // cleanup
     closesocket(ListenSocket);

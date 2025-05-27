@@ -2,9 +2,10 @@
 #include <thread> 
 #include <chrono>
 #include <cpuLoad.hpp> 
+#include <cmath>
 // https://learn.microsoft.com/en-us/windows/win32/perfctrs/performance-counters-portal
 
-float getMemoryUsage() {
+double getMemoryUsage() {
     _MEMORYSTATUSEX lpBuffer;
     lpBuffer.dwLength = sizeof(lpBuffer);
 
@@ -13,7 +14,7 @@ float getMemoryUsage() {
         DWORDLONG availablePhys = lpBuffer.ullAvailPhys;
         DWORDLONG usedPhys = totalPhys - availablePhys;
 
-        float memUsage = static_cast<float> (usedPhys) / totalPhys;
+        double memUsage = static_cast<double> (usedPhys) / totalPhys;
 
         return memUsage * 100;
     }
@@ -28,7 +29,7 @@ unsigned long long convertFiletime(FILETIME &filetime) {
     return num.QuadPart;
 }
 
-float getCPUUsage() {
+double getCPUUsage() {
     FILETIME idleTime, kernelTime, userTime;
     FILETIME idleTimeTwo, kernelTimeTwo, userTimeTwo;
     
@@ -43,7 +44,7 @@ float getCPUUsage() {
     unsigned long long systemTime = (kernel + user) - idle;
     unsigned long long totalTime = kernel + user;
 
-    float cpuUsage = static_cast<float>(systemTime) / static_cast<float>(totalTime);
+    double cpuUsage = static_cast<double>(systemTime) / static_cast<double>(totalTime);
 
     return cpuUsage * 100;
 }

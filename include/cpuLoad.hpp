@@ -3,7 +3,7 @@
 
 #include <Windows.h>
 
-float getMemoryUsage();
-float getCPUUsage();
+double getMemoryUsage();
+double getCPUUsage();
 
 #endif

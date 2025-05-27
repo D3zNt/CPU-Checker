@@ -4,14 +4,16 @@
 #include <vector>
 #include <string>
 #include <ctime>
+#include <mutex>
 
 typedef struct {
     std::string id;
     time_t timestamp;
-    float cpu;    // percentage
-    float memory; // percentage
+    double cpu;    // percentage
+    double memory; // percentage
 } CPU_DATA;
 
+extern std::mutex dataMutex;
 extern std::vector<CPU_DATA> DATA_RECORDS;
 
 #endif

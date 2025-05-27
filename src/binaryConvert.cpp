@@ -1,44 +1,41 @@
 #include <binaryBackup.hpp>
 
-std::ostringstream folderName;
-
-int createFolder() {
-
+std::string createFolder() {
+    std::ostringstream folderName;
+    
     time_t now = time(nullptr);
     tm local_tm;
-
     localtime_s(&local_tm, &now);
 
-    folderName << std::put_time(&local_tm,"%d-%b-%Y" );
-    const char* folderDir = folderName.str().c_str();  
-
-    if (_mkdir(folderDir) == 0) {
+    folderName << std::put_time(&local_tm, "%d-%b-%Y");
+    std::string folderPath = folderName.str();
+    
+    if (_mkdir(folderPath.c_str()) == 0) {
         std::cout << "Folder created\n";
     } else {
         std::cout << "Failed to create folder or it exists\n";
     }
-    return 0;
+
+    return folderPath;
 }
-
-void convert_to_binary(){
-
+void convert_to_binary(const std::vector<CPU_DATA>& records, const std::string& timeframe, const std::string& folderPath) {
     std::ostringstream fileName;
-    time_t now = time(nullptr);
-    tm local_tm;
 
-    localtime_s(&local_tm, &now);
+    fileName << "./" << folderPath << "/backup[" << timeframe << "].dat";
 
-    
-    fileName << folderName.str() << "/backup[" << std::put_time(&local_tm,"%H-%M-%S" ) << "].dat";
-    const char* fileNameInStr = fileName.str().c_str();
+    std::string fileNameStr = fileName.str();
 
-    std::fstream f(fileNameInStr, std::ios::out | std::ios::binary);
-
-    if(f){
-        f.write(reinterpret_cast<char*>(DATA_RECORDS.data()),DATA_RECORDS.size() * sizeof(CPU_DATA) );
-        f.close();      
-    }else {
-        std::cout << "failed to write";
+    std::fstream f(fileNameStr, std::ios::out | std::ios::binary);
+    if (f) {
+        for (auto &v : records) {
+            std::cout << "COMPUTER ID: " << v.id << "\n";
+            std::cout << "MEMORY USAGE (%): "<< v.memory << "\n";
+            std::cout << "CPU USAGE (%): " << v.cpu << "\n";
+            std::cout << "TIMESTAMP: " << v.timestamp << "\n\n";
+        }
+        f.write(reinterpret_cast<const char*>(records.data()), records.size() * sizeof(CPU_DATA));
+        f.close();
+    } else {
+        std::cerr << "Failed to write file: " << fileNameStr << '\n';
     }
-    
 }

@@ -9,6 +9,7 @@
 #include <nlohmann/json.hpp>
 #include <database.hpp>
 #include <cpuLoad.hpp>
+#include <cmath>
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -110,8 +111,8 @@ int main(int argc, char **argv)
         time(&timestamp);
 
         CPU_DATA perfMetricDevice;
-        perfMetricDevice.cpu = getCPUUsage();
-        perfMetricDevice.memory = getMemoryUsage();
+        perfMetricDevice.cpu = std::round(getCPUUsage() * 1000.0) / 1000.0;
+        perfMetricDevice.memory = std::round(getMemoryUsage() * 1000.0) / 1000.0;
         perfMetricDevice.timestamp = timestamp;
 
         j["id"] = hostname;
@@ -132,7 +133,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+        std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 
     freeaddrinfo(result);
