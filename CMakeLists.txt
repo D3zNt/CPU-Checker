@@ -24,6 +24,12 @@ target_link_libraries(ClientSide PRIVATE nlohmann_json::nlohmann_json ws2_32)
 
 # Server executable
 add_executable(ServerSide src/server.cpp src/interrupt.cpp 
-  src/database.cpp src/binaryConvert.cpp src/bufferData.cpp src/validation.cpp src/searchFiles.cpp)
+  src/database.cpp src/binaryConvert.cpp src/bufferData.cpp src/validation.cpp)
 target_include_directories(ServerSide PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(ServerSide PRIVATE nlohmann_json::nlohmann_json ws2_32)
+
+# Performance Analysis executable
+add_executable(PerformanceAnalysis src/interrupt.cpp src/database.cpp src/binaryConvert.cpp 
+src/bufferData.cpp src/searchFiles.cpp src/sortData.cpp)
+target_include_directories(PerformanceAnalysis PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(PerformanceAnalysis PRIVATE nlohmann_json::nlohmann_json ws2_32)

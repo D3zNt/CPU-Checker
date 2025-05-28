@@ -12,6 +12,6 @@
 #include <database.hpp>
 
 void convert_to_binary(const std::vector<CPU_DATA> &records, const std::string &timeframe, const std::string &folderPath);
-std::string createFolder();
+std::string createFolder(std::string parentFolder);
 
 #endif

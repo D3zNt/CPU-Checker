@@ -167,8 +167,6 @@ int main(void)
         }    
     }
 
-    /* Sudden termination -> immediately flushes all the buffer */
-    /* Pass interrupt status as argument */
     flushBuffer();
 
     // cleanup

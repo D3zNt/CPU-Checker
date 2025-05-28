@@ -1,4 +1,4 @@
-#include <database.hpp>
+#include <sortData.hpp>
 
 void mergin(std::vector<CPU_DATA>& vec, int left, int mid, int right) {
     std::vector<CPU_DATA> leftVec(vec.begin() + left, vec.begin() + mid + 1);
@@ -7,7 +7,7 @@ void mergin(std::vector<CPU_DATA>& vec, int left, int mid, int right) {
     int i = 0, j = 0, k = left;
 
     while (i < leftVec.size() && j < rightVec.size()) {
-        if (leftVec[i].memory < rightVec[j].memory) {
+        if (leftVec[i].cpu > rightVec[j].cpu) {
             vec[k++] = leftVec[i++];
         } else {
             vec[k++] = rightVec[j++];

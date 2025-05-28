@@ -178,6 +178,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{FD7BF4B6-3B08-3B92-BA9F-EE24577A23F0}</Project>
       <Name>ClientSide</Name>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\Saddam\Desktop\CPU-Checker\build\PerformanceAnalysis.vcxproj">
+      <Project>{7E934E91-1F28-33AF-AEB2-91C4DCA5EAD2}</Project>
+      <Name>PerformanceAnalysis</Name>
+    </ProjectReference>
     <ProjectReference Include="C:\Users\Saddam\Desktop\CPU-Checker\build\ServerSide.vcxproj">
       <Project>{7CD85E1C-21B1-3FA2-9B21-C25BF7F053AF}</Project>
       <Name>ServerSide</Name>

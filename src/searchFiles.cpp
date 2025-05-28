@@ -2,8 +2,15 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 #include <map>
 #include <nlohmann/json.hpp>
+#include <vector>
+#include <sortData.hpp>
+#include <cmath>
+#include <database.hpp>
+#include <Windows.h>
+#include <direct.h>
 
 using json = nlohmann::json;
 
@@ -15,7 +22,7 @@ bool isInTimeRange(const std::string& filename, int startSec, int endSec) {
     if (startPos == std::string::npos || endPos == std::string::npos)
         return false;
 
-    std::string timeStr = filename.substr(startPos + 5, endPos - startPos - 5); // Extract "HH-MM"
+    std::string timeStr = filename.substr(startPos + 7, endPos - (startPos + 7)); // Extract "HH-MM"
     int h, m;
     sscanf(timeStr.c_str(), "%2d-%2d", &h, &m);
     int totalSec = h * 3600 + m * 60;
@@ -23,9 +30,13 @@ bool isInTimeRange(const std::string& filename, int startSec, int endSec) {
     return totalSec >= startSec && totalSec <= endSec;
 }
 
+
 int main() {
-    int date, month, year;
-    std::cout << "Enter DD/MM/YY: ";
+    json j;
+
+    std::string month;
+    int date, year;
+    std::cout << "Enter DD MM YY: ";
     std::cin >> date >> month >> year;
 
     int sh, sm, eh, em;
@@ -38,15 +49,26 @@ int main() {
     int endSec = eh * 3600 + em * 60;
 
     // Store total CPU usage and count of appearances for each client
-    std::map<std::string, std::pair<double, int>> clientStats;
+    std::unordered_map<std::string, std::pair<int, std::vector<CPU_DATA>>> clientStats;
 
     double maxFileAvg = -1.0;
     std::string maxFileName;
     int filesRead = 0;
 
-    std::string strPath = std::to_string(date) + '-' + std::to_string(month) + '-' + std::to_string(year);
-    // Loop through files in the current directory
+    std::string strPath = "Backup/" + std::to_string(date) + '-' + month + '-' + std::to_string(year) + '/';
     std::filesystem::path dataPath = strPath;
+
+    if (!std::filesystem::exists(dataPath) || !std::filesystem::is_directory(dataPath)) {
+        std::cerr << "Error: The directory \"" << strPath << "\" does not exist or is not a valid directory.\n";
+        return 1;
+    }
+    // Monitor the client that connects the least and most
+    double leastClientCount = std::numeric_limits<double>::infinity();
+    std::string leastClient;
+    
+    int mostClientCount = -1;
+    std::string topClient;
+
     for (std::filesystem::directory_iterator dirIt(dataPath); dirIt != std::filesystem::directory_iterator(); ++dirIt) {
         std::filesystem::directory_entry entry = *dirIt;
         std::string fname = entry.path().filename().string();
@@ -58,38 +80,45 @@ int main() {
         // Only include files within the time range
         if (!isInTimeRange(fname, startSec, endSec)) {
             continue;
-        }
-
-        std::ifstream in(entry.path());
+        }        
+        std::ifstream in(entry.path(), std::ios::binary);
         if (!in) {
-            continue; // Skip unreadable files
+            continue;
         }
 
-        json j;
-        in >> j;
+        size_t logCount;
+        in.read(reinterpret_cast<char*>(&logCount), sizeof(logCount));
 
         double fileSum = 0.0;
         int fileCount = 0;
 
-        // Loop through all entries (clients) in the JSON file
-        for (json::iterator jt = j.begin(); jt != j.end(); ++jt) {
-            std::string client = jt.key();
-            double usage = jt.value();
+        for (size_t i = 0; i < logCount; i++) {
+            CPU_DATA record;
 
-            clientStats[client].first += usage; // Add to total CPU
-            clientStats[client].second++;       // Increment file count
+            // Read string length
+            size_t id_length;
+            in.read(reinterpret_cast<char*>(&id_length), sizeof(id_length));
 
-            fileSum += usage;
-            fileCount++;
+            // Read string content
+            record.id.resize(id_length);
+            in.read(record.id.data(), id_length);
+
+            in.read(reinterpret_cast<char*>(&record.cpu), sizeof(record.cpu));
+            in.read(reinterpret_cast<char*>(&record.memory), sizeof(record.memory));
+            in.read(reinterpret_cast<char*>(&record.timestamp), sizeof(record.timestamp));
+            
+            clientStats[record.id].first++;
+            clientStats[record.id].second.push_back(record);
+            
+            // Calculate the CPU Usage sum for each file
+            fileSum += record.cpu;
         }
 
         // Track the file with the highest average CPU usage
-        if (fileCount > 0) {
-            double avg = fileSum / fileCount;
-            if (avg > maxFileAvg) {
-                maxFileAvg = avg;
-                maxFileName = fname;
-            }
+        double avg = fileSum / logCount;
+        if (avg > maxFileAvg) {
+            maxFileAvg = avg;
+            maxFileName = fname;
         }
 
         filesRead++;
@@ -100,35 +129,77 @@ int main() {
         return 0;
     }
 
-    // Find top client (highest average) and least connected client
-    std::string topClient;
-    double highestAvg = -1.0;
-
-    std::string leastClient;
-    int fewestFiles = std::numeric_limits<int>::max();
-
-    for (std::map<std::string, std::pair<double, int>>::iterator it = clientStats.begin(); it != clientStats.end(); ++it) {
+    json clientsArray = json::array();
+    for (auto it = clientStats.begin(); it != clientStats.end(); ++it) {
         std::string client = it->first;
-        double total = it->second.first;
-        int count = it->second.second;
-        double avg = total / count;
+        int ClientNoOfConnections = it->second.first;
 
-        if (avg > highestAvg) {
-            highestAvg = avg;
-            topClient = client;
+        sortmerger(it->second.second, 0, it->second.second.size() - 1);
+
+        double cpuSum = 0.0;
+        double memorySum = 0.0;
+        int dataCount = it->second.first;
+
+        json topUsageRecords = json::array();
+        int topLimit = min(10, it->second.second.size());
+        for (int i = 0; i < topLimit; ++i) {
+            auto &vec = it->second.second[i];
+            cpuSum += vec.cpu;
+            memorySum += vec.memory;
+            topUsageRecords.push_back({
+                {"cpu", vec.cpu},
+                {"memory", vec.memory},
+                {"timestamp", vec.timestamp}
+            });
         }
 
-        if (count < fewestFiles) {
-            fewestFiles = count;
+        json clientObj = {
+            {"id", client},
+            {"avg_cpu", cpuSum / dataCount},
+            {"avg_memory", memorySum / dataCount},
+            {"top_usage_records", topUsageRecords}
+        };
+
+        if (ClientNoOfConnections < leastClientCount) {
             leastClient = client;
+            leastClientCount = ClientNoOfConnections;
         }
+
+        if (ClientNoOfConnections > mostClientCount) {
+            mostClientCount =  ClientNoOfConnections;
+            topClient = client;  
+        }
+        clientsArray.push_back(clientObj);
     }
 
-    // Output the report
-    std::cout << "\n====== CPU USAGE REPORT ======\n";
-    std::cout << "Most CPU usage client (avg): " << topClient << " with " << highestAvg << "%\n";
-    std::cout << "Least connected client: " << leastClient << " (in " << fewestFiles << " files)\n";
-    std::cout << "File with highest overall average CPU: " << maxFileName << " (" << maxFileAvg << "%)\n";
+    j["clients"] = clientsArray;
 
+    j["highest_file_cpu_avg"] = {
+        {"max_file_avg", maxFileAvg},
+        {"filename", maxFileName}
+    };
+
+    if (std::isinf(leastClientCount)) leastClientCount = 0.0f;
+    j["least_connected_client"] = {
+        {"no_of_connections", static_cast<int>(leastClientCount)},
+        {"client", leastClient}
+    };
+
+    if (mostClientCount == -1) mostClientCount = 0;
+    j["most_connected_client"] = {
+        {"no_of_connections", mostClientCount},
+        {"client", topClient}
+    };
+
+    _mkdir("Analysis");
+    std::string analysisFilename = "Analysis/analysis[" + std::to_string(sh) + '-' + std::to_string(sm) + '_' + std::to_string(eh) + '-' + std::to_string(em) + "].json";
+    std::ofstream ofile(analysisFilename);
+    
+    ofile << std::setw(4) << j << std::endl;
+    if (!ofile.is_open()) {
+        std::cout << "Failed to create file: " << analysisFilename << "\n";
+        perror("Reason");
+        return 1;
+    }
     return 0;
 }

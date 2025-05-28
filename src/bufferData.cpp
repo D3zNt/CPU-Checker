@@ -60,7 +60,7 @@ void flushBuffer() {
 
     if (entriesToFlush.empty()) return;
 
-    folderPath = createFolder();
+    folderPath = createFolder("Backup");
 
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < static_cast<int>(entriesToFlush.size()); ++i) {
