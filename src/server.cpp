@@ -17,7 +17,7 @@
 using json = nlohmann::json;
 
 int handleClientRequest(SOCKET ClientSocket) {
-    int iResult, iSendResult;
+    int iResult;
     char buffer[DEFAULT_BUFFER_LEN];
     iResult = recv(ClientSocket, buffer, DEFAULT_BUFFER_LEN, 0);
     
@@ -36,7 +36,12 @@ int handleClientRequest(SOCKET ClientSocket) {
             return 1;
         }
 
-        CPU_DATA machinePerformance = {JSONValue["id"], JSONValue["timestamp"], JSONValue["cpu_usage"], JSONValue["memory_usage"]};
+        CPU_DATA machinePerformance = {
+            JSONValue["id"], 
+            JSONValue["timestamp"], 
+            JSONValue["cpu_usage"], 
+            JSONValue["memory_usage"]
+        };
         
         {
             std::lock_guard<std::mutex> lock(dataMutex);
@@ -126,7 +131,7 @@ int main(void)
                 std::this_thread::sleep_for(std::chrono::seconds(60));
             }
         } catch (const std::exception &except) {
-            std::cerr << "Worker thread crashed: " << except.what() << '\n';
+            std::cerr << "[Background Thread] flushBuffer failed: " << except.what() << '\n';
         }
     }).detach();
 
@@ -161,7 +166,7 @@ int main(void)
                 try{
                     handleClientRequest(ClientSocket);
                 } catch (const std::exception &except) {
-                    std::cerr << "Worker thread crashed: " << except.what() << '\n';
+                    std::cerr << "[Background Thread] handleClientRequest failed: " << except.what() << '\n';
                 }
             }).detach();
         }    

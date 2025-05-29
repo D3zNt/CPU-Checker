@@ -8,7 +8,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <database.hpp>
-#include <cpuLoad.hpp>
+#include <performanceLoad.hpp>
 #include <cmath>
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
@@ -106,7 +106,6 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        /* TODO: CREATE A BETTER RANDOMIZATION ALGORITHM */
         time_t timestamp;
         time(&timestamp);
 
