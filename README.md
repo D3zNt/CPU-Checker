@@ -9,8 +9,6 @@ Before building and running CPU Checker, ensure the following software is instal
 - **CMake** (version 3.10 or higher)
 - **C++ compiler** (supporting C++20 or later)
   - _Windows_: MSVC (Visual Studio 2019+) or MinGW-w64
-  - _Linux_: GCC 10+ or Clang 10+
-  - _macOS_: Xcode Command Line Tools (Clang)
 - **Git** (to clone the repository)
 
 ## Building the Project
